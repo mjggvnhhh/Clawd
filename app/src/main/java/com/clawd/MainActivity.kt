@@ -21,7 +21,7 @@ import java.net.Socket
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 
-val SERVER_IP = "26.8.41.147"
+val SERVER_IP = "192.168.0.14"
 val SERVER_PORT = 4444
 
 class MainActivity : android.app.Activity() {
